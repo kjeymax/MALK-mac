@@ -12,7 +12,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 MONGO_DB_URI = os.getenv("MONGO_DB_URI")
 STATUS_MSG_ID = os.getenv("STATUS_MSG_ID")
 SCHEDULE_MSG_ID = os.getenv("SCHEDULE_MSG_ID")
-CHANNEL_TITLE = os.getenv("CHANNEL_TITLE", "AnimeDex")
+CHANNEL_TITLE = os.getenv("CHANNEL_TITLE", "H-Anime")
 INDEX_CHANNEL_USERNAME = os.getenv("INDEX_CHANNEL_USERNAME")
 UPLOADS_CHANNEL_USERNAME = os.getenv("UPLOADS_CHANNEL_USERNAME")
 TECHZ_API_KEY = os.getenv("TECHZ_API_KEY")
@@ -32,4 +32,4 @@ for k, v in {
     "COMMENTS_GROUP_LINK": COMMENTS_GROUP_LINK,
 }.items():
     if not v:
-        raise Exception(f"{k} not found .env file, please add it to use AutoAnimeBot")
+        raise Exception(f"{k} not found .env file, please add it to use H-Anime Bot")
