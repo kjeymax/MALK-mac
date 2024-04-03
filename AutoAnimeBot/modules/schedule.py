@@ -57,7 +57,7 @@ async def update_schedule(app):
                 i["time"], i["link"], i["title"]
             )
 
-        text += "\n<b>⏰ Current TimeZone :</b> <code>IST (UTC +5:30)</code>"
+        text += "\n<b>⏰ Current TimeZone :</b> <code>IST (UTC 12:00p)</code>"
         text += "\n\n<b>❗️ Note :</b> This is not when episodes will be uploaded on channel, it's when they will be released by subsplease"
 
         try:
