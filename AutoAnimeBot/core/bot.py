@@ -8,7 +8,6 @@ from AutoAnimeBot.inline import button1
 from pyrogram.types import Message
 from AutoAnimeBot.core.log import LOGGER
 
-
 class AutoAnimeBot(Client):
     def __init__(self):
         self.logger = LOGGER("AutoAnimeBot")
@@ -38,8 +37,8 @@ class AutoAnimeBot(Client):
         self.logger.info("==========JOIN @TECHZBOTS=========")
 
         self.logger.info("Adding Parsing Task")
-        asyncio.create_task(auto_parser(TECHZ_API_KEY, self))
-        asyncio.create_task(tg_handler(self, TECHZ_API_KEY))
+        asyncio.create_task(auto_parser(self))
+        asyncio.create_task(tg_handler(self))
 
     async def update_status(self, text):
         try:
@@ -59,7 +58,7 @@ class AutoAnimeBot(Client):
 ⏳ **Queue :** 
 
 {}
-    """
+        """
 
         queue_text = ""
         for i in self.queue[:10]:
