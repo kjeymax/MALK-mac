@@ -1,4 +1,4 @@
-print("AutoAnimeBot Config Generator\n")
+print("HAnime Config Generator\n")
 
 config = ""
 
