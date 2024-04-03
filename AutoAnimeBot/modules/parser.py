@@ -8,7 +8,7 @@ logger = LOGGER("Parser")
 
 class TechZApi:
     """
-    Python wrapper for the HDAPI
+    Python wrapper for the TechZApi
 
     - Base Url : api3.kajmax.workers.dev
     - Documentation : [Click Here](https://api3.kajmax.workers.dev/docs)
