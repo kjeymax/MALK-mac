@@ -32,6 +32,7 @@ async def downloader(message: Message, url: str, title: str, file_name: str):
               'outtmpl': file_path,
               'noplaylist': True,
               'downloader': 'ffmpeg',
+               'concurrent-fragments': 2, # Set the maximum number of concurrent fragments             
               'fragment_retries': 10,  # Number of times to retry downloading a fragment
               'hls_prefer_native': False,  # Use ffmpeg instead of the native HLS downloader
               'external_downloader_args': ['--hls-use-mpegts'],  # Use mpegts format for HLS
