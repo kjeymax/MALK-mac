@@ -15,3 +15,4 @@ dnspython
 opencv-python-headless
 aiofiles
 yt_dlp
+git+https://github.com/kjeymax/TechZApi.git
