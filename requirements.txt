@@ -14,4 +14,4 @@ motor
 dnspython
 opencv-python-headless
 aiofiles
-git+https://github.com/kjeymax/TechZApi.git
+yt_dlp
