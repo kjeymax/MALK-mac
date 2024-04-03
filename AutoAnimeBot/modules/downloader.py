@@ -1,59 +1,52 @@
+#KMAC coding
 import os
 import shutil
+import time
+import aiofiles
+import yt_dlp
 from pyrogram.types import Message
 from AutoAnimeBot.core.log import LOGGER
 from AutoAnimeBot.modules.progress import progress_text
-import time
-import aiohttp
-import aiofiles
 
 logger = LOGGER("Downloader")
 
-
-async def downloader(message: Message, l, title, file_name):
+async def downloader(message: Message, url: str, title: str, file_name: str):
     logger.info(f"Downloading {title}")
+
     try:
         shutil.rmtree("downloads")
-    except:
+    except FileNotFoundError:
         pass
 
     if not os.path.exists("downloads"):
         os.mkdir("downloads")
 
-    file_name = f"downloads/{file_name}"
+    file_path = f"downloads/{file_name}"
 
     t1 = time.time()
     dcount = 1  # Downloaded count in 10 sec
 
     try:
-        t_out = aiohttp.ClientTimeout(
-            total=7200.0, connect=7200.0, sock_read=7200.0, sock_connect=7200.0
-        )
-        async with aiohttp.ClientSession(timeout=t_out) as session:
-            async with session.get(l) as response:
-                if response.content_length:
-                    total = response.content_length / 1024
-                else:
-                    total = 1
+        ydl_opts = {
+              'format': 'best',
+              'outtmpl': file_path,
+              'noplaylist': True,
+              'downloader': 'ffmpeg',
+              'fragment_retries': 10,  # Number of times to retry downloading a fragment
+              'hls_prefer_native': False,  # Use ffmpeg instead of the native HLS downloader
+              'external_downloader_args': ['--hls-use-mpegts'],  # Use mpegts format for HLS
+}
 
-                done = 1
-                async with aiofiles.open(file_name, "wb") as f:
-                    async for data in response.content.iter_chunked(1024):
-                        await f.write(data)
-                        done += 1
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            total = info_dict.get('filesize', 0)
 
-                        t2 = time.time()
-                        if t2 - t1 > 10:
-                            try:
-                                t1 = t2
-                                text = progress_text(
-                                    "Downloading", title, done, total, dcount
-                                )
-                                await message.edit_caption(text)
-                                dcount = done
-                            except Exception as e:
-                                logger.warning(str(e))
+        logger.info(f"Downloaded {title}")
+        return file_path
+
+    except yt_dlp.utils.DownloadError as e:
+        logger.warning(str(e))
     except Exception as e:
         logger.warning(str(e))
-    logger.info(f"Downloaded {title}")
-    return file_name
+    
+    return None
