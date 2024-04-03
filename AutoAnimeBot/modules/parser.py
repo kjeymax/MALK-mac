@@ -1,21 +1,38 @@
 import asyncio
-from techzapi.api import TechZApi
+import requests
 from AutoAnimeBot.core.log import LOGGER
 from AutoAnimeBot.modules.schedule import update_schedule
 from AutoAnimeBot.modules.db import get_animesdb, get_uploads, is_failed, save_animedb
 
-
 logger = LOGGER("Parser")
 
+class TechZApi:
+    """
+    Python wrapper for the HDAPI
 
-async def auto_parser(TECHZ_API_KEY, app):
-    Gogo = TechZApi.Gogo(TECHZ_API_KEY)
-    Gogo.base = "https://api3.kajmax.workers.dev"
+    - Base Url : api3.kajmax.workers.dev
+    - Documentation : [Click Here](https://api3.kajmax.workers.dev/docs)
+    """
+
+    def __init__(self) -> None:
+        self.base = "https://api3.kajmax.workers.dev"
+
+    def get_recent_anime(self, page=1):
+        """
+        Get recent animes
+        """
+        data = requests.get(
+            f"{self.base}/recent/{page}"
+        ).json()
+        return data["results"]
+
+async def auto_parser(app):
+    techz_api = TechZApi()  # Create an instance of your custom class
 
     while True:
         await app.update_status("Scrapping Animes...")
 
-        data = Gogo.latest()
+        data = techz_api.get_recent_anime()  # Call the method from your custom class
         saved = await get_animesdb()
         uploaded = await get_uploads()
 
@@ -52,3 +69,5 @@ async def auto_parser(TECHZ_API_KEY, app):
         await app.update_status("Idle...")
 
         await asyncio.sleep(600)
+
+# The rest of your code remains unchanged
