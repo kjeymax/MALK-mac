@@ -1,0 +1,17 @@
+pip
+setuptools 
+wheel
+aiohttp
+pyrogram>=2.0
+TgCrypto
+python-dotenv
+feedparser
+pillow
+requests
+bs4
+uvloop
+motor
+dnspython
+opencv-python-headless
+aiofiles
+git+https://github.com/kjeymax/TechZApi.git
