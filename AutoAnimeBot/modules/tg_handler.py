@@ -1,4 +1,5 @@
 import asyncio
+import os
 import requests
 from AutoAnimeBot.core.log import LOGGER
 from AutoAnimeBot.modules.uploader import upload_video
@@ -10,6 +11,9 @@ from AutoAnimeBot.modules.db import (
     is_quality_uploaded,
     save_channel,
     save_uploads,
+    is_voted,
+    save_vote,
+    is_uploaded,
 )
 from AutoAnimeBot.modules.downloader import downloader
 from AutoAnimeBot.modules.anilist import get_anilist_data, get_anime_img, get_anime_name
@@ -19,7 +23,8 @@ from config import (
     UPLOADS_CHANNEL_USERNAME,
     SLEEP_TIME,
 )
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.errors import FloodWait
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
 from pyrogram import filters
 from pyrogram.client import Client
 
