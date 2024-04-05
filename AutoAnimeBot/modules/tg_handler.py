@@ -1,3 +1,4 @@
+#@K-MAC Coding
 import asyncio
 import os
 import requests
@@ -44,11 +45,11 @@ async def tg_handler(appp):
                 logger.info("Processing : " + i)
 
                 # Fetch episode links
-                episode_url = f"https://api3.kajmax.workers.dev/episode/{i}"
+                episode_url = f"https://api3.kajmax.workers.dev/download/{i}"
                 data = await fetch_episode_links(episode_url)
 
                 if data:
-                    dlinks = data.get("results", {}).get("servers", {})
+                    dlinks = data.get("results", {})
                     for q, l in dlinks.items():
                         if await is_quality_uploaded(i, q):
                             continue
@@ -126,86 +127,6 @@ async def start_uploading(app, q, l, eid):
         except:
             pass
 
-async def channel_handler(video_id, anime_id, name, ep_num, quality):
-    try:
-        dl_id, episodes, post = await get_channel(anime_id)
-
-        if dl_id == 0:
-            # Assuming you have a function to get anime information from Anilist
-            img, caption = await get_anilist_data(name)
-            main = await app.send_photo(
-                app.INDEX_CHANNEL_ID,
-                photo=img,
-                caption=caption,
-                reply_markup=VOTE_MARKUP,
-            )
-            link = f"➤ **Episode {ep_num}** : [{quality}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{video_id})"
-
-            dl = await app.send_message(
-                app.INDEX_CHANNEL_ID,
-                EPITEXT.format(link),
-                disable_web_page_preview=True,
-            )
-            dl_id = int(dl.message_id)
-            post = int(main.message_id)
-
-            caption += f"\n📥 **Download -** [{name}](https://t.me/{INDEX_CHANNEL_USERNAME}/{dl_id})"
-            await main.edit_caption(caption, reply_markup=VOTE_MARKUP)
-            episode = {ep_num: [(quality, video_id)]}
-            await save_channel(anime_id, post=post, dl_id=dl_id, episodes=episode)
-
-        else:
-            episodes[ep_num].append((quality, video_id))
-            await save_channel(anime_id, post, dl_id, episodes)
-
-            text = ""
-            for ep, data in episodes.items():
-                line = f"➤ **Episode {ep}** : "
-                for q, v in data:
-                    line += f"[{q}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{v}) | "
-
-                x = line[:-3] + "\n"
-
-                if len(x) + len(text) > 4000:
-                    dl = await app.send_message(
-                        app.INDEX_CHANNEL_ID,
-                        EPITEXT.format(x),
-                        disable_web_page_preview=True,
-                        reply_to_message_id=post,
-                    )
-                    dl_id = int(dl.message_id)
-                    await save_channel(anime_id, post, dl_id, {ep: data})
-
-                else:
-                    text += x
-                    await app.edit_message_text(
-                        app.INDEX_CHANNEL_ID,
-                        dl_id,
-                        EPITEXT.format(text),
-                        disable_web_page_preview=True,
-                    )
-
-        main_id = dl_id
-        info_id = main_id - 1
-        buttons = InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        text="Info",
-                        url=f"https://t.me/{INDEX_CHANNEL_USERNAME}/{info_id}",
-                    ),
-                    InlineKeyboardButton(
-                        text="Comments",
-                        url=f"https://t.me/{INDEX_CHANNEL_USERNAME}/{main_id}?thread={main_id}",
-                    ),
-                ]
-            ]
-        )
-        await app.edit_message_reply_markup(
-            app.UPLOADS_CHANNEL_ID, video_id, reply_markup=buttons
-        )
-    except Exception as e:
-        logger.warning(str(e))
 
 
 VOTE_MARKUP = InlineKeyboardMarkup(
