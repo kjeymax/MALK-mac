@@ -208,7 +208,15 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
         logger.warning(str(e))
 
 
-VOTE_MARKUP = InlineKeyboardMarkup([])
+VOTE_MARKUP = InlineKeyboardMarkup(
+    [
+        [
+            InlineKeyboardButton(text="👍", callback_data="vote1"),
+            InlineKeyboardButton(text="♥️", callback_data="vote2"),
+            InlineKeyboardButton(text="👎", callback_data="vote3"),
+        ]
+    ]
+)
 
 EPITEXT = """
 🔰 **Episodes :**
