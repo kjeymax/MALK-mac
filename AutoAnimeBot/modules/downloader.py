@@ -28,15 +28,16 @@ async def downloader(message: Message, url: str, title: str, file_name: str):
 
     try:
         ydl_opts = {
-              'format': 'best',
-              'outtmpl': file_path,
-              'noplaylist': True,
-              'downloader': 'ffmpeg',
-               'concurrent-fragments': 2, # Set the maximum number of concurrent fragments             
-              'fragment_retries': 10,  # Number of times to retry downloading a fragment
-              'hls_prefer_native': False,  # Use ffmpeg instead of the native HLS downloader
-              'external_downloader_args': ['--hls-use-mpegts'],  # Use mpegts format for HLS
-}
+            'format': 'best',
+            'outtmpl': file_path,
+            'noplaylist': True,
+            'allow_multiple_video_streams': True,
+            'allow_multiple_audio_streams': True,
+            '--concurrent-fragments': 4 , # Set the maximum number of concurrent fragments           
+            'fragment_retries': 10,      # Number of times to retry downloading a fragment
+            'hls_prefer_native': False,  # Use ffmpeg instead of the native HLS downloader
+        }
+          
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
