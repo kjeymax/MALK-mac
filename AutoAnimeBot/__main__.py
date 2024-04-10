@@ -5,7 +5,6 @@ from pyrogram.types import Message
 from uvloop import install
 from contextlib import closing, suppress
 from pyrogram import idle
-import AutoAnimeBot.modules.vote
 from AutoAnimeBot import app
 
 loop = asyncio.get_event_loop()
