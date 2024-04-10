@@ -1,5 +1,4 @@
 import asyncio
-import os
 import requests
 from AutoAnimeBot.core.log import LOGGER
 from AutoAnimeBot.modules.uploader import upload_video
@@ -11,9 +10,6 @@ from AutoAnimeBot.modules.db import (
     is_quality_uploaded,
     save_channel,
     save_uploads,
-    is_voted,
-    save_vote,
-    is_uploaded,
 )
 from AutoAnimeBot.modules.downloader import downloader
 from AutoAnimeBot.modules.anilist import get_anilist_data, get_anime_img, get_anime_name
@@ -23,8 +19,7 @@ from config import (
     UPLOADS_CHANNEL_USERNAME,
     SLEEP_TIME,
 )
-from pyrogram.errors import FloodWait
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, CallbackQuery
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram import filters
 from pyrogram.client import Client
 
@@ -103,7 +98,7 @@ async def fetch_episode_links(url):
         return None
 
 
-async def start_uploading(app, q, eid):
+async def start_uploading(app, q, l, eid):
     try:
         title = eid.replace("-", " ").title().strip() + f" - {q}"
         file_name = f"{title} [@{UPLOADS_CHANNEL_USERNAME}].mp4"
@@ -113,7 +108,7 @@ async def start_uploading(app, q, eid):
         msg = await app.send_photo(app.UPLOADS_CHANNEL_ID, photo=img, caption=title)
 
         await app.update_status(f"Downloading {title}")
-        file = await downloader(msg, title, file_name)
+        file = await downloader(msg, l, title, file_name)
 
         await app.update_status(f"Uploading {title}")
         video_id = await upload_video(app, msg, file, id, tit, title, eid)
@@ -126,7 +121,97 @@ async def start_uploading(app, q, eid):
         except:
             pass
 
+async def channel_handler(video_id, anime_id, name, ep_num, quality):
+    try:
+        dl_id, episodes, post = await get_channel(anime_id)
 
+        if dl_id == 0:
+            # Assuming you have a function to get anime information from Anilist
+            img, caption = await get_anilist_data(name)
+            main = await app.send_photo(
+                app.INDEX_CHANNEL_ID,
+                photo=img,
+                caption=caption,
+                reply_markup=VOTE_MARKUP,
+            )
+            link = f"➤ **Episode {ep_num}** : [{quality}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{video_id})"
+
+            dl = await app.send_message(
+                app.INDEX_CHANNEL_ID,
+                EPITEXT.format(link),
+                disable_web_page_preview=True,
+            )
+            dl_id = int(dl.message_id)
+            post = int(main.message_id)
+
+            caption += f"\n📥 **Download -** [{name}](https://t.me/{INDEX_CHANNEL_USERNAME}/{dl_id})"
+            await main.edit_caption(caption, reply_markup=VOTE_MARKUP)
+            episode = {ep_num: [(quality, video_id)]}
+            await save_channel(anime_id, post=post, dl_id=dl_id, episodes=episode)
+
+        else:
+            episodes[ep_num].append((quality, video_id))
+            await save_channel(anime_id, post, dl_id, episodes)
+
+            text = ""
+            for ep, data in episodes.items():
+                line = f"➤ **Episode {ep}** : "
+                for q, v in data:
+                    line += f"[{q}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{v}) | "
+
+                x = line[:-3] + "\n"
+
+                if len(x) + len(text) > 4000:
+                    dl = await app.send_message(
+                        app.INDEX_CHANNEL_ID,
+                        EPITEXT.format(x),
+                        disable_web_page_preview=True,
+                        reply_to_message_id=post,
+                    )
+                    dl_id = int(dl.message_id)
+                    await save_channel(anime_id, post, dl_id, {ep: data})
+
+                else:
+                    text += x
+                    await app.edit_message_text(
+                        app.INDEX_CHANNEL_ID,
+                        dl_id,
+                        EPITEXT.format(text),
+                        disable_web_page_preview=True,
+                    )
+
+        main_id = dl_id
+        info_id = main_id - 1
+        buttons = InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        text="Info",
+                        url=f"https://t.me/{INDEX_CHANNEL_USERNAME}/{info_id}",
+                    ),
+                    InlineKeyboardButton(
+                        text="Comments",
+                        url=f"https://t.me/{INDEX_CHANNEL_USERNAME}/{main_id}?thread={main_id}",
+                    ),
+                ]
+            ]
+        )
+        await app.edit_message_reply_markup(
+            app.UPLOADS_CHANNEL_ID, video_id, reply_markup=buttons
+        )
+    except Exception as e:
+        logger.warning(str(e))
+
+
+VOTE_MARKUP = InlineKeyboardMarkup(
+    [
+        [
+            InlineKeyboardButton(text="👍", callback_data="vote1"),
+            InlineKeyboardButton(text="♥️", callback_data="vote2"),
+            InlineKeyboardButton(text="👎", callback_data="vote3"),
+        ]
+    ]
+)
 
 EPITEXT = """
 🔰 **Episodes :**
@@ -144,7 +229,7 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
                 app.INDEX_CHANNEL_ID,
                 photo=img,
                 caption=caption,
-            
+                reply_markup=VOTE_MARKUP,
             )
             link = f"➤ **Episode {ep_num}** : [{quality}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{video_id})"
 
@@ -155,14 +240,14 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
             )
             await app.send_sticker(
                 app.INDEX_CHANNEL_ID,
-                "CAACAgUAAxkBAAEZVLlmFn2q7tDBSl5MNw8lW9k1Ak4U2gACFQ8AAnAfsVRLXl7c2z-pxDQE",
+                "CAACAgUAAxkBAAEUmDtkHHayrNb6EFmmlzQlF3wR03QY2AACGgYAApROQVYbFOqQoyJzAy8E",
             )
 
             dl_id = int(dl.id)
             post = int(main.id)
 
             caption += f"\n📥 **Download -** [{name}](https://t.me/{INDEX_CHANNEL_USERNAME}/{dl_id})"
-            await main.edit_caption(caption)
+            await main.edit_caption(caption, reply_markup=VOTE_MARKUP)
             episode = {ep_num: [(quality, video_id)]}
             await save_channel(anime_id, post=post, dl_id=dl_id, episodes=episode)
 
