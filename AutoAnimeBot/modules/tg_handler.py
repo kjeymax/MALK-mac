@@ -1,4 +1,3 @@
-#@K-MAC Coding
 import asyncio
 import os
 import requests
@@ -104,7 +103,7 @@ async def fetch_episode_links(url):
         return None
 
 
-async def start_uploading(app, q, l, eid):
+async def start_uploading(app, q, eid):
     try:
         title = eid.replace("-", " ").title().strip() + f" - {q}"
         file_name = f"{title} [@{UPLOADS_CHANNEL_USERNAME}].mp4"
@@ -114,7 +113,7 @@ async def start_uploading(app, q, l, eid):
         msg = await app.send_photo(app.UPLOADS_CHANNEL_ID, photo=img, caption=title)
 
         await app.update_status(f"Downloading {title}")
-        file = await downloader(msg, l, title, file_name)
+        file = await downloader(msg, title, file_name)
 
         await app.update_status(f"Uploading {title}")
         video_id = await upload_video(app, msg, file, id, tit, title, eid)
@@ -145,6 +144,7 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
                 app.INDEX_CHANNEL_ID,
                 photo=img,
                 caption=caption,
+            
             )
             link = f"➤ **Episode {ep_num}** : [{quality}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{video_id})"
 
