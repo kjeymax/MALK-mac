@@ -25,8 +25,8 @@ def progress_text(status, filename, current, total, dcounto):
 {}: {}%
 ⟨⟨{}⟩⟩
 {} of {}
-Speed: {}
-ETA: {}
+⚡️ Speed: {}
+📊 ETA: {}
     """
     if total == 0:
         total = 1
