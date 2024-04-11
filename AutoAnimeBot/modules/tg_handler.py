@@ -203,16 +203,6 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
         logger.warning(str(e))
 
 
-VOTE_MARKUP = InlineKeyboardMarkup(
-    [
-        [
-            InlineKeyboardButton(text="👍", callback_data="vote1"),
-            InlineKeyboardButton(text="♥️", callback_data="vote2"),
-            InlineKeyboardButton(text="👎", callback_data="vote3"),
-        ]
-    ]
-)
-
 EPITEXT = """
 🔰 **Episodes :**
 
@@ -229,7 +219,6 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
                 app.INDEX_CHANNEL_ID,
                 photo=img,
                 caption=caption,
-                reply_markup=VOTE_MARKUP,
             )
             link = f"➤ **Episode {ep_num}** : [{quality}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{video_id})"
 
@@ -240,14 +229,14 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
             )
             await app.send_sticker(
                 app.INDEX_CHANNEL_ID,
-                "CAACAgUAAxkBAAEUmDtkHHayrNb6EFmmlzQlF3wR03QY2AACGgYAApROQVYbFOqQoyJzAy8E",
+                "CAACAgUAAxkBAAEZVLlmFn2q7tDBSl5MNw8lW9k1Ak4U2gACFQ8AAnAfsVRLXl7c2z-pxDQE",
             )
 
             dl_id = int(dl.id)
             post = int(main.id)
 
             caption += f"\n📥 **Download -** [{name}](https://t.me/{INDEX_CHANNEL_USERNAME}/{dl_id})"
-            await main.edit_caption(caption, reply_markup=VOTE_MARKUP)
+            await main.edit_caption(caption)
             episode = {ep_num: [(quality, video_id)]}
             await save_channel(anime_id, post=post, dl_id=dl_id, episodes=episode)
 
