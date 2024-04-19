@@ -10,8 +10,8 @@ from AutoAnimeBot.core.log import LOGGER
 
 class AutoAnimeBot(Client):
     def __init__(self):
-        self.logger = LOGGER("AutoAnimeBot")
-        self.logger.info("Starting AutoAnimeBot")
+        self.logger = LOGGER("HABot")
+        self.logger.info("Starting HABot")
         super().__init__(
             "AutoAnimeBot", api_id=int(API_ID), api_hash=API_HASH, bot_token=BOT_TOKEN
         )
@@ -33,8 +33,8 @@ class AutoAnimeBot(Client):
         )
 
         self.logger.info("==================================")
-        self.logger.info("AutoAnimeBot Started Bot Successfully")
-        self.logger.info("==========JOIN @TECHZBOTS=========")
+        self.logger.info("H-Anime Bot Started Bot Successfully")
+        self.logger.info("==========H-Anime=========")
 
         self.logger.info("Adding Parsing Task")
         asyncio.create_task(auto_parser(self))
