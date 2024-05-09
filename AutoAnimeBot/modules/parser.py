@@ -15,7 +15,7 @@ class TechZApi:
     """
 
     def __init__(self) -> None:
-        self.base = "https://api-consumet-dlst3n16z-kjeymaxs-projects.vercel.app/anime/gogoanime"
+        self.base = "https://api3.kajmax.workers.dev"
 
     def get_recent_anime(self, page=1):
         """
