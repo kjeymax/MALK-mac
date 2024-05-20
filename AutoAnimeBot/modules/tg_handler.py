@@ -173,13 +173,6 @@ def generate_episodes_text(episodes):
     return text
 
 
-def generate_episodes_text(episodes):
-    text = ""
-    for ep, data in episodes.items():
-        line = f"➤ **Episode {ep}** : " + " | ".join([f"[{q}](https://t.me/{UPLOADS_CHANNEL_USERNAME}/{v})" for q, v in data]) + "\n"
-        text += line
-    return text
-
 EPITEXT = """
 🔰 **Episodes :**
 
