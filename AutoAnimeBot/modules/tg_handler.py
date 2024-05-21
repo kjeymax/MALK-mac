@@ -76,11 +76,16 @@ async def fetch_episode_links(url):
         logger.error(f"An error occurred while fetching episode links: {e}")
         return None
 
-async def start_uploading(app, q, l, eid):
+async def start_uploading(app: Client, q: str, l: str, eid: str):
     title = eid.replace("-", " ").title().strip() + f" - {q}"
     file_name = f"{title} [@{UPLOADS_CHANNEL_USERNAME}].mp4"
-    anime = eid.split("-episode-")[0].replace("-", " ").title().strip()
+    anime_parts = eid.split("-episode-")
+    if len(anime_parts) != 2:
+        logger.error(f"Unexpected format for eid: {eid}")
+        return None, None, None, None
+    anime = anime_parts[0].replace("-", " ").title().strip()
 
+    msg = None
     try:
         id, img, tit = await get_anime_img(anime)
         msg = await app.send_photo(app.UPLOADS_CHANNEL_ID, photo=img, caption=title)
@@ -88,7 +93,7 @@ async def start_uploading(app, q, l, eid):
         file = await downloader(msg, l, title, file_name)
         await app.update_status(f"Uploading {title}")
         video_id = await upload_video(app, msg, file, id, tit, title, eid)
-        return video_id, id, tit, eid.split("-episode-")[1]
+        return video_id, id, tit, anime_parts[1]
     except Exception as e:
         logger.error(f"Error in start_uploading for {eid}: {e}")
         if msg:
@@ -98,7 +103,6 @@ async def start_uploading(app, q, l, eid):
                 logger.error(f"Error deleting message: {del_e}")
         return None, None, None, None
 
-import json
 
 async def channel_handler(video_id, anime_id, name, ep_num, quality):
     try:
