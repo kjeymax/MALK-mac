@@ -8,184 +8,122 @@ import os
 import asyncio
 from config import CHANNEL_TITLE
 
+MAX_RETRIES = 5
+FONT_PATHS = {
+    "font1": "assets/Roboto-Bold.ttf",
+    "font2": "assets/Oswald-Regular.ttf",
+    "font3": "assets/Raleway-Bold.ttf"
+}
 
 def get_screenshot(file):
     cap = cv2.VideoCapture(file)
     name = "./" + "".join(random.choices(ascii_uppercase + digits, k=10)) + ".jpg"
-
-    total_frames = round(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-    frame_num = random.randint(0, total_frames)
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num - 1)
-    res, frame = cap.read()
-
-    cv2.imwrite(name, frame)
-    cap.release()
+    try:
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+        frame_num = random.randint(0, total_frames)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_num - 1)
+        res, frame = cap.read()
+        if not res:
+            raise ValueError("Could not read frame.")
+        cv2.imwrite(name, frame)
+    finally:
+        cap.release()
     return name
-
 
 def make_col():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
-
 def truncate(text):
-    list = text.split(" ")
-    text1 = ""
-    text2 = ""
+    words = text.split(" ")
+    text1, text2 = "", ""
     pos = 0
-    for i in list:
-        if len(text1) + len(i) < 16 and pos == 0:
-            text1 += " " + i
-        elif len(text2) + len(i) < 16:
+    for word in words:
+        if len(text1) + len(word) < 16 and pos == 0:
+            text1 += " " + word
+        elif len(text2) + len(word) < 16:
             pos = 1
-            text2 += " " + i
+            text2 += " " + word
+    return text1.strip(), text2.strip()
 
-    text1 = text1.strip()
-    text2 = text2.strip()
-    return text1, text2
-
-
-err = 0
-
+async def fetch_url_content(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.content
+    except requests.RequestException as e:
+        print(f"Error fetching URL content: {e}")
+        return None
 
 async def get_cover(id):
-    global err
+    for attempt in range(MAX_RETRIES):
+        url = f"https://anilist.co/anime/{id}"
+        page_content = await fetch_url_content(url)
+        if page_content is None:
+            await asyncio.sleep(2)
+            continue
 
-    try:
-        url = "https://anilist.co/anime/" + str(id)
-
-        r = requests.get(url).content
-        soup = bs(r, "html.parser")
-
-        img = soup.find("img", "cover")
-        img = img.get("src")
-
-        r = requests.get(img).content
-
-        fname = "./" + "".join(random.choices(ascii_uppercase + digits, k=10)) + ".jpg"
-        with open(fname, "wb") as file:
-            file = file.write(r)
-
-        err = 0
-        return fname
-    except:
+        soup = bs(page_content, "html.parser")
+        img_tag = soup.find("img", "cover")
+        if img_tag:
+            img_url = img_tag.get("src")
+            img_content = await fetch_url_content(img_url)
+            if img_content:
+                fname = "./" + "".join(random.choices(ascii_uppercase + digits, k=10)) + ".jpg"
+                with open(fname, "wb") as file:
+                    file.write(img_content)
+                return fname
         await asyncio.sleep(2)
+    return "assets/c4UUTC4DAe.jpg"
 
-        err += 1
-        if err != 5:
-            return await get_cover(id)
-        else:
-            err = 0
-            return "assets/c4UUTC4DAe.jpg"
-
-
-def changeImageSize(maxWidth, maxHeight, image):
-    widthRatio = maxWidth / image.size[0]
-    heightRatio = maxHeight / image.size[1]
-    newWidth = int(widthRatio * image.size[0])
-    newHeight = int(heightRatio * image.size[1])
-    newImage = image.resize((newWidth, newHeight))
-    return newImage
-
+def change_image_size(max_width, max_height, image):
+    width_ratio = max_width / image.size[0]
+    height_ratio = max_height / image.size[1]
+    new_width = int(width_ratio * image.size[0])
+    new_height = int(height_ratio * image.size[1])
+    return image.resize((new_width, new_height))
 
 async def generate_thumbnail(id, file, title, ep_num, size, dur):
     ss = get_screenshot(file)
     cc = await get_cover(id)
+    border_color = make_col()
 
-    border = make_col()
-    image = Image.open(ss)
-    image = image.convert("RGBA")
-    image = image.resize((1280, 720))
+    image = Image.open(ss).convert("RGBA").resize((1280, 720))
+    cover = Image.open(cc).convert("RGBA")
+    cover = cover.resize((round((cover.width * 720) / cover.height), 720))
 
-    cover = Image.open(cc)
-    cover = cover.convert("RGBA")
-    w, h = cover.size
-    w = round((w * 720) / h)
-    cover = cover.resize((w, 720))
-
-    original = cover
-    xy = [(50, 0), (0, 720), (w, 720), (w, 0)]
-    mask = Image.new("L", original.size, 0)
+    mask = Image.new("L", cover.size, 0)
     draw = ImageDraw.Draw(mask)
-    draw.polygon(xy, fill=255, outline=None)
-    black = Image.new("RGBA", original.size, 0)
-    result = Image.composite(original, black, mask)
-    cover = result
+    draw.polygon([(50, 0), (0, 720), (cover.width, 720), (cover.width, 0)], fill=255)
+    cover = Image.composite(cover, Image.new("RGBA", cover.size, 0), mask)
 
-    image2 = image.filter(filter=ImageFilter.GaussianBlur(10))
-    black = Image.new("RGB", (1280, 720), "black").convert("RGBA")
-    image2 = Image.blend(image2, black, 0.5)
+    image_blur = image.filter(ImageFilter.GaussianBlur(10))
+    image_blur = Image.blend(image_blur, Image.new("RGBA", (1280, 720), "black"), 0.5)
+    image_blur.paste(cover, (1280 - cover.width, 0), cover)
+    image_blur = ImageOps.expand(image_blur.convert("RGB"), 20, border_color)
 
-    image2.paste(cover, (1280 - w, 0), cover)
-    image2 = image2.convert("RGB")
+    draw = ImageDraw.Draw(image_blur)
+    draw.line([((1280 - cover.width) + 50, 0), ((1280 - cover.width) + 0, 720)], border_color, 20)
 
-    image2 = ImageOps.expand(image2, 20, border)
-    image2 = image2.resize((1280, 720))
+    fonts = {name: ImageFont.truetype(path, size) for name, path, size in [
+        ("font1", FONT_PATHS["font1"], 70),
+        ("font2", FONT_PATHS["font2"], 80),
+        ("font3", FONT_PATHS["font3"], 50)
+    ]}
 
-    ldraw = ImageDraw.Draw(image2)
-    line = [((1280 - w) + 50, 0), ((1280 - w) + 0, 720)]
-    ldraw.line(line, border, 20)
-    # fonts
-    font1 = ImageFont.truetype("assets/Roboto-Bold.ttf", 70)
-    font2 = ImageFont.truetype("assets/Oswald-Regular.ttf", 80)
-    font3 = ImageFont.truetype("assets/Raleway-Bold.ttf", 50)
-
-    image3 = ImageDraw.Draw(image2)
-
-    image3.text(
-        (150, 80),
-        f"{CHANNEL_TITLE}",
-        "white",
-        font2,
-        stroke_width=5,
-        stroke_fill="black",
-    )
-
+    draw.text((150, 80), f"{CHANNEL_TITLE}", "white", fonts["font2"], stroke_width=5, stroke_fill="black")
     text1, text2 = truncate(title)
-    image3.text((60, 230), text1, "white", font1, stroke_width=5, stroke_fill="black")
-    if text2 != "":
-        image3.text(
-            (60, 310), text2, "white", font1, stroke_width=5, stroke_fill="black"
-        )
+    draw.text((60, 230), text1, "white", fonts["font1"], stroke_width=5, stroke_fill="black")
+    if text2:
+        draw.text((60, 310), text2, "white", fonts["font1"], stroke_width=5, stroke_fill="black")
+    draw.text((60, 420), f"Episode : {ep_num}", "white", fonts["font3"], stroke_width=2, stroke_fill="black")
+    draw.text((60, 500), f"File Size : {size}", "white", fonts["font3"], stroke_width=2, stroke_fill="black")
+    draw.text((60, 580), f"Duration : {dur}", "white", fonts["font3"], stroke_width=2, stroke_fill="black")
 
-    image3.text(
-        (60, 420),
-        f"Episode : {ep_num}",
-        "white",
-        font3,
-        stroke_width=2,
-        stroke_fill="black",
-    )
-    image3.text(
-        (60, 500),
-        f"File Size : {size}",
-        "white",
-        font3,
-        stroke_width=2,
-        stroke_fill="black",
-    )
-    image3.text(
-        (60, 580),
-        f"Duration : {dur}",
-        "white",
-        font3,
-        stroke_width=2,
-        stroke_fill="black",
-    )
+    thumb_path = "./downloads/" + "".join(random.choices(ascii_uppercase + digits, k=10)) + ".jpg"
+    image_blur.save(thumb_path)
 
-    image2.thumbnail((1280, 720))
-    w, h = image2.size
-
-    thumb = (
-        "./downloads/"
-        + "".join(random.choices(ascii_uppercase + digits, k=10))
-        + ".jpg"
-    )
-    image2.save(thumb)
-
-    try:
-        os.remove(ss)
-        if cc != "assets/c4UUTC4DAe.jpg":
-            os.remove(cc)
-    except:
-        pass
-    return thumb, w, h
+    os.remove(ss)
+    if cc != "assets/c4UUTC4DAe.jpg":
+        os.remove(cc)
+    
+    return thumb_path, 1280, 720
