@@ -131,8 +131,7 @@ atext = """
 • **Rating:** `{}/100`
 • **Format:** `HD/FHD`
 • **Source:**[H-Anime](https://t.me/H_Anime_Official)
-━━━━━━━━━━━━━\n"
-"
+━━━━━━━━━━━━━
 """
 
 
