@@ -121,16 +121,17 @@ def get_anime_name(title):
 
 atext = """
 📺 **{}** 
-**({})**\n
+**({})**
 ━━━━━━━━━━━━━
-╭🎭 **Genre »** `{}`
-├🧬 **Type »** `{}`
-├📡 **Status »** `{}`
-├🗓 **Episodes »** `{}`
-├💾 **Duration »** `{}`
-├⭐️ **Rating »** `{}/100`
-├🎞 **Format »** `HD/FHD`
-╰☁️ **Source »** [H-Anime](https://t.me/H_Anime_Official)
+• **Genre »** `{}`
+• **Type »** `{}`
+• **Status »** `{}`
+• **Episodes »** `{}`
+• **Duration »** `{}`
+• **Rating »** `{}/100`
+• **Format »** `HD/FHD`
+━━━━━━━━━━━━━\n"
+"✴ **Source:**[H-Anime](https://t.me/H_Anime_Official)
 """
 
 
