@@ -129,7 +129,7 @@ async def channel_handler(video_id, anime_id, name, ep_num, quality):
             dl_id = int(dl.id)
             post = int(main.id)
 
-            caption += f"\n📥 **Download -** [{name}](https://t.me/{INDEX_CHANNEL_USERNAME}/{dl_id})"
+            caption += f"\n**[Download:** [{name}](https://t.me/{INDEX_CHANNEL_USERNAME}/{dl_id})**]**"
             await main.edit_caption(caption)
             episode = {ep_num: [(quality, video_id)]}
             await save_channel(anime_id, post=post, dl_id=dl_id, episodes=episode)
