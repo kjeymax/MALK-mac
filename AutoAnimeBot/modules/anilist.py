@@ -123,15 +123,16 @@ atext = """
 📺 **{}** 
 **({})**
 ━━━━━━━━━━━━━
-• **Genre »** `{}`
-• **Type »** `{}`
-• **Status »** `{}`
-• **Episodes »** `{}`
-• **Duration »** `{}`
-• **Rating »** `{}/100`
-• **Format »** `HD/FHD`
+• **Genre:** `{}`
+• **Type:** `{}`
+• **Status:** `{}`
+• **Episodes:** `{}`
+• **Duration:** `{}`
+• **Rating:** `{}/100`
+• **Format:** `HD/FHD`
+• **Source:**[H-Anime](https://t.me/H_Anime_Official)
 ━━━━━━━━━━━━━\n"
-"✴ **Source:**[H-Anime](https://t.me/H_Anime_Official)
+"
 """
 
 
@@ -182,6 +183,6 @@ async def get_anilist_data(name):
     if site == "youtube":
         caption += f"\n[Trailer](https://www.youtube.com/watch?v={ytid}) | [More Info](https://anilist.co/anime/{id_})"
     else:
-        caption += f"\n[More Info](https://anilist.co/anime/{id_})"
+        caption += f"\n[More Info](https://anilist.co/anime/{id_})\n"
 
     return img, caption
